@@ -39,11 +39,10 @@ IO.try = function (f) {
 
 IO.method = function (f) {
   return function () {
-    try {
-      return IO.resolved(f.apply(this, arguments));
-    } catch (e) {
-      return IO.rejected(e);
-    }
+    var c = this, a = arguments;
+    return IO.try(function () {
+      return f.apply(c, a);
+    });
   };
 };
 
