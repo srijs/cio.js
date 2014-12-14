@@ -27,7 +27,11 @@ IO.rejected = function (reason) {
 
 IO.try = function (f) {
   try {
-    return IO.resolved(f());
+    var v = f();
+    if (!(v instanceof IO)) {
+      return IO.resolved(v);
+    }
+    return v;
   } catch (e) {
     return IO.rejected(e);
   }
