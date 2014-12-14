@@ -1,0 +1,22 @@
+{
+  "name": "cio",
+  "version": "0.0.0",
+  "description": "Controlled I/O",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/srijs/cio.js.git"
+  },
+  "author": "Sam Rijs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/srijs/cio.js/issues"
+  },
+  "homepage": "https://github.com/srijs/cio.js",
+  "devDependencies": {
+    "mocha": "^2.0.1"
+  }
+}
