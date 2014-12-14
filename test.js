@@ -75,12 +75,12 @@ describe('Composition', function () {
 
     it('error handler is called with (reason)', function (done) {
       var handlerCalled = 0;
-      IO.run(IO.rejected(rejectReason).bind(IO.method(function (value) {
+      IO.run(IO.rejected(rejectReason).bind(function (value) {
         assert(false, 'wrong handler called');
-      }), IO.method(function (reason) {
+      }, function (reason) {
         handlerCalled++;
         assert.equal(reason, rejectReason);
-      })), function (err, value) {
+      }), function (err, value) {
         assert.ifError(err);
         assert.equal(1, handlerCalled);
         done();
@@ -89,12 +89,12 @@ describe('Composition', function () {
 
     it('value handler is called with (value)', function (done) {
       var handlerCalled = 0;
-      IO.run(IO.resolved(resolveValue).bind(IO.method(function (value) {
+      IO.run(IO.resolved(resolveValue).bind(function (value) {
         handlerCalled++;
         assert.equal(value, resolveValue);
-      }), IO.method(function (reason) {
+      }, function (reason) {
         assert(false, 'wrong handler called');
-      })), function (err, value) {
+      }), function (err, value) {
         assert.ifError(err);
         assert.equal(1, handlerCalled);
         done();

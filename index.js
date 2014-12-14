@@ -23,9 +23,9 @@ IO.rejected = function (reason) {
   return io;
 };
 
-IO.try = function (f) {
+var apply = function (f, c, a) {
   try {
-    var v = f();
+    var v = f.apply(c, a);
     if (!(v instanceof IO)) {
       return IO.resolved(v);
     }
@@ -35,12 +35,13 @@ IO.try = function (f) {
   }
 };
 
+IO.try = function (f) {
+  return apply(f, null, []);
+};
+
 IO.method = function (f) {
   return function () {
-    var c = this, a = arguments;
-    return IO.try(function () {
-      return f.apply(c, a);
-    });
+    return apply(f, this, arguments);
   };
 };
 
@@ -58,10 +59,10 @@ IO.prototype.bind = function (hf, hr) {
     return io;
   }
   if (this.state === stateFulfilled) {
-    return (hf || IO.resolved)(this.value);
+    return apply(hf || IO.resolved, null, [this.value]);
   }
   if (this.state === stateRejected) {
-    return (hr || IO.rejected)(this.reason);
+    return apply(hr || IO.rejected, null, [this.reason]);
   }
   return this;
 };
