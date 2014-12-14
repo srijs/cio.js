@@ -69,60 +69,38 @@ describe('Constructors', function () {
 
 });
 
-describe('Binders', function () {
+describe('Composition', function () {
 
-  describe('bindFulfilled', function () {
+  describe('bind', function () {
 
-    it('handler is called with (value)', function (done) {
-      var handlerCalled = false;
-      IO.run(IO.resolved(resolveValue).bindFulfilled(IO.method(function (value) {
-        handlerCalled = true;
-        assert.equal(value, resolveValue);
-      })), function (err, value) {
-        assert.ifError(err);
-        assert(handlerCalled);
-        done();
-      });
-    });
-
-    it('handler is not called with (reason)', function (done) {
-      var handlerCalled = false;
-      IO.run(IO.rejected(rejectReason).bindFulfilled(IO.method(function (value) {
-        handlerCalled = true;
-      })), function (err, value) {
-        assert.equal(err, rejectReason);
-        assert(!handlerCalled);
-        done();
-      });
-    });
-
-  });
-
-  describe('bindRejected', function () {
-
-    it('handler is called with (reason)', function (done) {
-      var handlerCalled = false;
-      IO.run(IO.rejected(rejectReason).bindRejected(IO.method(function (reason) {
-        handlerCalled = true;
+    it('error handler is called with (reason)', function (done) {
+      var handlerCalled = 0;
+      IO.run(IO.rejected(rejectReason).bind(IO.method(function (value) {
+        assert(false, 'wrong handler called');
+      }), IO.method(function (reason) {
+        handlerCalled++;
         assert.equal(reason, rejectReason);
       })), function (err, value) {
         assert.ifError(err);
-        assert(handlerCalled);
+        assert.equal(1, handlerCalled);
         done();
       });
     });
 
-    it('handler is not called with (value)', function (done) {
-      var handlerCalled = false;
-      IO.run(IO.resolved(resolveValue).bindRejected(IO.method(function (reason) {
-        handlerCalled = true;
+    it('value handler is called with (value)', function (done) {
+      var handlerCalled = 0;
+      IO.run(IO.resolved(resolveValue).bind(IO.method(function (value) {
+        handlerCalled++;
+        assert.equal(value, resolveValue);
+      }), IO.method(function (reason) {
+        assert(false, 'wrong handler called');
       })), function (err, value) {
         assert.ifError(err);
-        assert.equal(value, resolveValue); 
-        assert(!handlerCalled);
+        assert.equal(1, handlerCalled);
         done();
       });
     });
 
   });
+
 });

@@ -7,8 +7,6 @@ var IO = module.exports = function (a) {
   this.action = a;
   this.value = null;
   this.reason = null;
-  this.onFulfilled = IO.resolved;
-  this.onRejected = IO.rejected;
 };
 
 IO.resolved = function (value) {
@@ -46,56 +44,48 @@ IO.method = function (f) {
   };
 };
 
-IO.prototype.bindFulfilled = function (h) {
+IO.prototype.bind = function (hf, hr) {
   var of = this.onFulfilled;
   var or = this.onRejected;
   if (this.state === statePending) {
     var io = new IO(this.action);
     io.onFulfilled = function (value) {
-      return of(value).bindFulfilled(h);
+      return (of || IO.resolved)(value).bind(hf, hr);
     };
     io.onRejected = function (reason) {
-      return of(value).bindFulfilled(h);
+      return (or || IO.rejected)(reason).bind(hf, hr); 
     };
     return io;
   }
   if (this.state === stateFulfilled) {
-    return h(this.value);
-  }
-  return this;
-};
-
-IO.prototype.bindRejected = function (h) {
-  var of = this.onFulfilled;
-  var or = this.onRejected;
-  if (this.state === statePending) {
-    var io = new IO(this.action);
-    io.onFulfilled = function (value) {
-      return of(value).bindRejected(h);
-    };
-    io.onRejected = function (reason) {
-      return or(reason).bindRejected(h); 
-    };
-    return io;
+    return (hf || IO.resolved)(this.value);
   }
   if (this.state === stateRejected) {
-    return h(this.reason);
+    return (hr || IO.rejected)(this.reason);
   }
   return this;
 };
 
 IO.run = function (io, cb) {
   if (io.state === stateFulfilled) {
-    return cb(null, io.value);
-  }
-  if (io.state === stateRejected) {
-    return cb(io.reason);
-  }
-  io.action(function (err, value) {
-    if (err) {
-      IO.run(io.onRejected(err), cb);
+    if (io.onFulfilled) {
+      IO.run(io.onFulfilled(io.value), cb);
     } else {
-      IO.run(io.onFulfilled(value), cb);
+      cb(null, io.value);
     }
-  });
+  } else if (io.state === stateRejected) {
+    if (io.onRejected) {
+      IO.run(io.onRejected(io.reason), cb);
+    } else {
+      cb(io.reason);
+    }
+  } else {
+    io.action(function (err, value) {
+      if (err) {
+        IO.run(io.onRejected(err), cb);
+      } else {
+        IO.run(io.onFulfilled(value), cb);
+      }
+    });
+  }
 };
