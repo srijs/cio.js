@@ -7,6 +7,8 @@ var IO = module.exports = function (a) {
   this.action = a;
   this.value = null;
   this.reason = null;
+  this.onFulfilled = null;
+  this.onRejected = null;
 };
 
 IO.resolved = function (value) {
@@ -23,6 +25,18 @@ IO.rejected = function (reason) {
   return io;
 };
 
+var invoke = function (f, v) {
+  try {
+    var v = f(v);
+    if (!(v instanceof IO)) {
+      return IO.resolved(v);
+    }
+    return v;
+  } catch (e) {
+    return IO.rejected(e);
+  }
+};
+
 var apply = function (f, c, a) {
   try {
     var v = f.apply(c, a);
@@ -35,9 +49,7 @@ var apply = function (f, c, a) {
   }
 };
 
-IO.try = function (f) {
-  return apply(f, null, []);
-};
+IO.try = invoke;
 
 IO.method = function (f) {
   return function () {
@@ -46,23 +58,23 @@ IO.method = function (f) {
 };
 
 IO.prototype.bind = function (hf, hr) {
-  var of = this.onFulfilled;
-  var or = this.onRejected;
+  var of = this.onFulfilled || IO.resolved;
+  var or = this.onRejected || IO.rejected;
   if (this.state === statePending) {
     var io = new IO(this.action);
     io.onFulfilled = function (value) {
-      return (of || IO.resolved)(value).bind(hf, hr);
+      return of(value).bind(hf, hr);
     };
     io.onRejected = function (reason) {
-      return (or || IO.rejected)(reason).bind(hf, hr); 
+      return or(reason).bind(hf, hr);
     };
     return io;
   }
   if (this.state === stateFulfilled) {
-    return apply(hf || IO.resolved, null, [this.value]);
+    return invoke(hf || IO.resolved, this.value);
   }
   if (this.state === stateRejected) {
-    return apply(hr || IO.rejected, null, [this.reason]);
+    return invoke(hr || IO.rejected, this.reason);
   }
   return this;
 };
@@ -83,9 +95,17 @@ IO.run = function (io, cb) {
   } else {
     io.action(function (err, value) {
       if (err) {
-        IO.run(io.onRejected(err), cb);
+        if (io.onRejected) {
+          IO.run(io.onRejected(err), cb);
+        } else {
+          cb(err);
+        }
       } else {
-        IO.run(io.onFulfilled(value), cb);
+        if (io.onFulfilled) {
+          IO.run(io.onFulfilled(value), cb);
+        } else {
+          cb(null, value);
+        }
       }
     });
   }
