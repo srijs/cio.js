@@ -103,4 +103,56 @@ describe('Composition', function () {
 
   });
 
+  describe('multiple bind', function () {
+
+    it('error handler is called with (reason)', function (done) {
+      var handlerCalled = 0;
+      IO.run(IO.resolved(resolveValue).bind(function (value) {
+        handlerCalled++;
+        assert.equal(value, resolveValue);
+        return IO.rejected(rejectReason);
+      }, function (reason) {
+        assert(false, 'wrong handler called 1');
+      }).bind(function (value) {
+        assert(false, 'wrong handler called 2');
+      }, function (reason) {
+        handlerCalled++;
+        assert.equal(reason, rejectReason);
+        return IO.resolved(resolveValue);
+      }).bind(null, function () {
+        assert(false, 'wrong handler called 2');
+      }), function (err, value) {
+        assert.ifError(err);
+        assert.equal(value, resolveValue);
+        assert.equal(2, handlerCalled);
+        done();
+      });
+    });
+
+    it('value handler is called with (value)', function (done) {
+      var handlerCalled = 0;
+      IO.run(IO.rejected(rejectReason).bind(function (value) {
+        assert(false, 'wrong handler called 1');
+      }, function (reason) {
+        handlerCalled++;
+        assert.equal(reason, rejectReason);
+        return IO.resolved(resolveValue);
+      }).bind(function (value) {
+        handlerCalled++;
+        assert.equal(value, resolveValue);
+        return IO.rejected(rejectReason);
+      }, function (reason) {
+        assert(false, 'wrong handler called 2');
+      }).bind(function () {
+        assert(false, 'wrong handler called 2');
+      }), function (err, value) {
+        assert.equal(err, rejectReason);
+        assert.equal(undefined, value);
+        assert.equal(2, handlerCalled);
+        done();
+      });
+    });
+
+  });
+
 });
