@@ -10,7 +10,7 @@ describe('Constructors', function () {
   describe('resolved', function () {
 
     it('calls run callback with (null, value)', function (done) {
-      IO.run(IO.resolved(resolveValue), function (err, value) {
+      IO.run({}, IO.resolved(resolveValue), function (err, value) {
         assert.ifError(err);
         assert.equal(value, resolveValue);
         done();
@@ -22,7 +22,7 @@ describe('Constructors', function () {
   describe('rejected', function () {
 
     it('calls run callback with (err)', function (done) {
-      IO.run(IO.rejected(rejectReason), function (err) {
+      IO.run({}, IO.rejected(rejectReason), function (err) {
         assert.equal(err, rejectReason);
         done();
       });
@@ -34,7 +34,7 @@ describe('Constructors', function () {
 
     it('returns the resolved IO that f returns', function (done) {
       var io = IO.resolved(resolveValue);
-      IO.run(IO.try(function () { return io; }), function (err, value) {
+      IO.run({}, IO.try(function () { return io; }), function (err, value) {
         assert.ifError(err);
         assert.equal(value, resolveValue);
         done();
@@ -43,7 +43,7 @@ describe('Constructors', function () {
 
     it('returns the rejected IO that f returns', function (done) {
       var io = IO.rejected(rejectReason);
-      IO.run(IO.try(function () { return io; }), function (err) {
+      IO.run({}, IO.try(function () { return io; }), function (err) {
         assert.equal(err, rejectReason);
         done();
       });
@@ -51,7 +51,7 @@ describe('Constructors', function () {
 
 
     it('returns a resolved IO if f returns a value', function (done) {
-      IO.run(IO.try(function () { return resolveValue; }), function (err, value) {
+      IO.run({}, IO.try(function () { return resolveValue; }), function (err, value) {
         assert.ifError(err);
         assert.equal(value, resolveValue);
         done();
@@ -59,7 +59,7 @@ describe('Constructors', function () {
     });
 
     it('returns a rejected IO if f throws', function (done) {
-      IO.run(IO.try(function () { throw rejectReason; }), function (err) {
+      IO.run({}, IO.try(function () { throw rejectReason; }), function (err) {
         assert.equal(err, rejectReason);
         done();
       });
@@ -75,7 +75,7 @@ describe('Composition', function () {
 
     it('error handler is called with (reason)', function (done) {
       var handlerCalled = 0;
-      IO.run(IO.rejected(rejectReason).bind(function (value) {
+      IO.run({}, IO.rejected(rejectReason).bind(function (value) {
         assert(false, 'wrong handler called');
       }, function (reason) {
         handlerCalled++;
@@ -89,7 +89,7 @@ describe('Composition', function () {
 
     it('value handler is called with (value)', function (done) {
       var handlerCalled = 0;
-      IO.run(IO.resolved(resolveValue).bind(function (value) {
+      IO.run({}, IO.resolved(resolveValue).bind(function (value) {
         handlerCalled++;
         assert.equal(value, resolveValue);
       }, function (reason) {
@@ -107,7 +107,7 @@ describe('Composition', function () {
 
     it('error handler is called with (reason)', function (done) {
       var handlerCalled = 0;
-      IO.run(IO.resolved(resolveValue).bind(function (value) {
+      IO.run({}, IO.resolved(resolveValue).bind(function (value) {
         handlerCalled++;
         assert.equal(value, resolveValue);
         return IO.rejected(rejectReason);
@@ -131,7 +131,7 @@ describe('Composition', function () {
 
     it('value handler is called with (value)', function (done) {
       var handlerCalled = 0;
-      IO.run(IO.rejected(rejectReason).bind(function (value) {
+      IO.run({}, IO.rejected(rejectReason).bind(function (value) {
         assert(false, 'wrong handler called 1');
       }, function (reason) {
         handlerCalled++;

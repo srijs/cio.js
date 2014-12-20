@@ -2,9 +2,10 @@ var statePending = 0,
     stateFulfilled = 1,
     stateRejected = 2;
 
-var IO = module.exports = function (a) {
+var IO = module.exports = function (type, args) {
   this.state = statePending;
-  this.action = a;
+  this.type = type;
+  this.args = args || [];
   this.value = null;
   this.reason = null;
   this.onFulfilled = null;
@@ -79,7 +80,7 @@ IO.prototype.bind = function (hf, hr) {
   return this;
 };
 
-IO.run = function (io, cb) {
+IO.run = function (actions, io, cb) {
   if (io.state === stateFulfilled) {
     if (io.onFulfilled) {
       IO.run(io.onFulfilled(io.value), cb);
@@ -93,7 +94,7 @@ IO.run = function (io, cb) {
       cb(io.reason);
     }
   } else {
-    io.action(function (err, value) {
+    actions[io.type].apply(null, io.args.concat(function (err, value) {
       if (err) {
         if (io.onRejected) {
           IO.run(io.onRejected(err), cb);
@@ -101,12 +102,15 @@ IO.run = function (io, cb) {
           cb(err);
         }
       } else {
+        if (arguments.length > 2) {
+          value = Array.prototype.slice.call(arguments, 1);
+        }
         if (io.onFulfilled) {
           IO.run(io.onFulfilled(value), cb);
         } else {
           cb(null, value);
         }
       }
-    });
+    }));
   }
 };
