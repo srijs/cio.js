@@ -7,6 +7,59 @@ var rejectReason = new Error('fail');
 
 describe('Constructors', function () {
 
+  describe('action', function () {
+
+    it('calls run callback with (null, value)', function (done) {
+      IO.run({
+        test: function (cb) {
+          cb(null, resolveValue);
+        }
+      }, new IO('test'), function (err, value) {
+        assert.ifError(err);
+        assert.equal(value, resolveValue);
+        done();
+      });
+    });
+
+    it('calls run callback with (err)', function (done) {
+      IO.run({
+        test: function (cb) {
+          cb(rejectReason);
+        }
+      }, new IO('test'), function (err, value) {
+        assert.equal(err, rejectReason);
+        done();
+      });
+    });
+
+    it('passes arguments to action', function (done) {
+      IO.run({
+        test: function (foo, bar, cb) {
+          assert.equal(foo, 'foo');
+          assert.equal(bar, 'bar');
+          cb(null, resolveValue);
+        }
+      }, new IO('test', ['foo', 'bar']), function (err, value) {
+        assert.ifError(err);
+        assert.equal(value, resolveValue);
+        done();
+      });
+    });
+
+    it('converts multiple arguments to array', function (done) {
+      IO.run({
+        test: function (cb) {
+          cb(null, 'foo', 'bar');
+        }
+      }, new IO('test'), function (err, value) {
+        assert.ifError(err);
+        assert.deepEqual(value, ['foo', 'bar']);
+        done();
+      });
+    });
+
+  });
+
   describe('resolved', function () {
 
     it('calls run callback with (null, value)', function (done) {
