@@ -17,6 +17,8 @@
   },
   "homepage": "https://github.com/srijs/cio.js",
   "devDependencies": {
+    "benchmark": "^1.0.0",
+    "microtime": "^1.0.1",
     "mocha": "^2.0.1"
   }
 }
