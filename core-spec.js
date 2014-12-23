@@ -1,6 +1,6 @@
 var assert = require('assert');
 
-var IO = require('./index.js');
+var IO = require('./core');
 
 var resolveValue = {};
 var rejectReason = new Error('fail');
@@ -124,11 +124,11 @@ describe('Constructors', function () {
 
 describe('Composition', function () {
 
-  describe('bind', function () {
+  describe('map', function () {
 
     it('error handler is called with (reason)', function (done) {
       var handlerCalled = 0;
-      IO.run({}, IO.rejected(rejectReason).bind(function (value) {
+      IO.run({}, IO.rejected(rejectReason).map(function (value) {
         assert(false, 'wrong handler called');
       }, function (reason) {
         handlerCalled++;
@@ -142,7 +142,7 @@ describe('Composition', function () {
 
     it('value handler is called with (value)', function (done) {
       var handlerCalled = 0;
-      IO.run({}, IO.resolved(resolveValue).bind(function (value) {
+      IO.run({}, IO.resolved(resolveValue).map(function (value) {
         handlerCalled++;
         assert.equal(value, resolveValue);
       }, function (reason) {
@@ -156,23 +156,23 @@ describe('Composition', function () {
 
   });
 
-  describe('multiple bind', function () {
+  describe('multiple map', function () {
 
     it('error handler is called with (reason)', function (done) {
       var handlerCalled = 0;
-      IO.run({}, IO.resolved(resolveValue).bind(function (value) {
+      IO.run({}, IO.resolved(resolveValue).map(function (value) {
         handlerCalled++;
         assert.equal(value, resolveValue);
         return IO.rejected(rejectReason);
       }, function (reason) {
         assert(false, 'wrong handler called 1');
-      }).bind(function (value) {
+      }).map(function (value) {
         assert(false, 'wrong handler called 2');
       }, function (reason) {
         handlerCalled++;
         assert.equal(reason, rejectReason);
         return IO.resolved(resolveValue);
-      }).bind(null, function () {
+      }).map(null, function () {
         assert(false, 'wrong handler called 2');
       }), function (err, value) {
         assert.ifError(err);
@@ -184,19 +184,19 @@ describe('Composition', function () {
 
     it('value handler is called with (value)', function (done) {
       var handlerCalled = 0;
-      IO.run({}, IO.rejected(rejectReason).bind(function (value) {
+      IO.run({}, IO.rejected(rejectReason).map(function (value) {
         assert(false, 'wrong handler called 1');
       }, function (reason) {
         handlerCalled++;
         assert.equal(reason, rejectReason);
         return IO.resolved(resolveValue);
-      }).bind(function (value) {
+      }).map(function (value) {
         handlerCalled++;
         assert.equal(value, resolveValue);
         return IO.rejected(rejectReason);
       }, function (reason) {
         assert(false, 'wrong handler called 2');
-      }).bind(function () {
+      }).map(function () {
         assert(false, 'wrong handler called 2');
       }), function (err, value) {
         assert.equal(err, rejectReason);

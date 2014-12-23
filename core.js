@@ -58,16 +58,16 @@ IO.method = function (f) {
   };
 };
 
-IO.prototype.bind = function (hf, hr) {
+IO.prototype.map = function (hf, hr) {
   var of = this.onFulfilled || IO.resolved;
   var or = this.onRejected || IO.rejected;
   if (this.state === statePending) {
-    var io = new IO(this.action);
+    var io = new IO(this.type, this.args);
     io.onFulfilled = function (value) {
-      return of(value).bind(hf, hr);
+      return of(value).map(hf, hr);
     };
     io.onRejected = function (reason) {
-      return or(reason).bind(hf, hr);
+      return or(reason).map(hf, hr);
     };
     return io;
   }
@@ -83,21 +83,21 @@ IO.prototype.bind = function (hf, hr) {
 IO.run = function (actions, io, cb) {
   if (io.state === stateFulfilled) {
     if (io.onFulfilled) {
-      IO.run(io.onFulfilled(io.value), cb);
+      IO.run(actions, io.onFulfilled(io.value), cb);
     } else {
       cb(null, io.value);
     }
   } else if (io.state === stateRejected) {
     if (io.onRejected) {
-      IO.run(io.onRejected(io.reason), cb);
+      IO.run(actions, io.onRejected(io.reason), cb);
     } else {
       cb(io.reason);
     }
   } else {
-    actions[io.type].apply(null, io.args.concat(function (err, value) {
+    actions[io.type].apply(null, [].concat(io.args, function (err, value) {
       if (err) {
         if (io.onRejected) {
-          IO.run(io.onRejected(err), cb);
+          IO.run(actions, io.onRejected(err), cb);
         } else {
           cb(err);
         }
@@ -106,7 +106,7 @@ IO.run = function (actions, io, cb) {
           value = Array.prototype.slice.call(arguments, 1);
         }
         if (io.onFulfilled) {
-          IO.run(io.onFulfilled(value), cb);
+          IO.run(actions, io.onFulfilled(value), cb);
         } else {
           cb(null, value);
         }

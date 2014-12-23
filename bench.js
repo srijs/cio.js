@@ -1,9 +1,6 @@
 var Benchmark = require('benchmark');
 
-var IO = require('./index');
-var Bluebird = require('bluebird');
-
-Bluebird.onPossiblyUnhandledRejection(function(e, promise) {});
+var IO = require('./core');
 
 var opts = {
   onStart: function () {
