@@ -58,16 +58,16 @@ IO.method = function (f) {
   };
 };
 
-IO.prototype.map = function (hf, hr) {
+IO.prototype.then = function (hf, hr) {
   var of = this.onFulfilled || IO.resolved;
   var or = this.onRejected || IO.rejected;
   if (this.state === statePending) {
     var io = new IO(this.type, this.args);
     io.onFulfilled = function (value) {
-      return of(value).map(hf, hr);
+      return of(value).then(hf, hr);
     };
     io.onRejected = function (reason) {
-      return or(reason).map(hf, hr);
+      return or(reason).then(hf, hr);
     };
     return io;
   }
