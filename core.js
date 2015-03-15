@@ -3,32 +3,30 @@ var statePending = 0,
     stateRejected = 2;
 
 var IO = module.exports = function (type, args) {
-  this.state = statePending;
-  this.type = type;
-  this.args = args || [];
-  this.value = null;
-  this.reason = null;
-  this.onFulfilled = null;
-  this.onRejected = null;
+  Object.defineProperties(this, {
+    state: {value: statePending},
+    type: {value: type},
+    args: {value: args || []}
+  });
 };
 
 IO.resolved = function (value) {
-  var io = new IO();
-  io.state = stateFulfilled;
-  io.value = value;
-  return io;
+  return Object.defineProperties(Object.create(IO.prototype), {
+    state: {value: stateFulfilled},
+    value: {value: value}
+  });
 };
 
 IO.rejected = function (reason) {
-  var io = new IO();
-  io.state = stateRejected;
-  io.reason = reason;
-  return io;
+  return Object.defineProperties(Object.create(IO.prototype), {
+    state: {value: stateRejected},
+    reason: {value: reason}
+  });
 };
 
-var invoke = function (f, v) {
+var invoke = function (f, a) {
   try {
-    var v = f(v);
+    var v = f(a);
     if (!(v instanceof IO)) {
       return IO.resolved(v);
     }
